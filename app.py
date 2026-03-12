@@ -20,13 +20,7 @@ def index():
 @app.route("/upload", methods=["POST"])
 def upload_files():
 
-    if "files" not in request.files:
-        return "Không có file"
-
     files = request.files.getlist("files")
-
-    if len(files) == 0:
-        return "Bạn chưa chọn nhạc"
 
     songs = []
 
@@ -38,23 +32,21 @@ def upload_files():
         path = os.path.join(UPLOAD_FOLDER, f.filename)
         f.save(path)
 
-        try:
-            audio = AudioSegment.from_file(path)
-        except:
-            return "File không hợp lệ"
-
-        # nhân 3 lần
-        audio = audio * 3
+        audio = AudioSegment.from_file(path)
 
         songs.append(audio)
 
     if len(songs) == 0:
         return "Không có file hợp lệ"
 
-    final = songs[0]
+    # ghép tất cả trước
+    playlist = songs[0]
 
     for s in songs[1:]:
-        final += s
+        playlist += s
+
+    # sau đó mới nhân 3
+    final = playlist * 3
 
     output_name = str(uuid.uuid4()) + ".mp3"
     output_path = os.path.join(OUTPUT_FOLDER, output_name)
