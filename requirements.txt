@@ -1,4 +1,4 @@
 flask
 pydub
 gunicorn
-ffmpeg-python
+imageio-ffmpeg
