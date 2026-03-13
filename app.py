@@ -22,6 +22,9 @@ def upload_files():
 
     files = request.files.getlist("files")
 
+    if not files:
+        return "No files uploaded"
+
     songs = []
 
     for f in files:
@@ -29,34 +32,41 @@ def upload_files():
         if f.filename == "":
             continue
 
-        path = os.path.join(UPLOAD_FOLDER, f.filename)
+        # tránh trùng tên file
+        filename = str(uuid.uuid4()) + ".mp3"
+        path = os.path.join(UPLOAD_FOLDER, filename)
+
         f.save(path)
 
-        audio = AudioSegment.from_file(path)
-
-        songs.append(audio)
+        try:
+            audio = AudioSegment.from_file(path)
+            songs.append(audio)
+        except Exception as e:
+            return f"Error processing file: {str(e)}"
 
     if len(songs) == 0:
-        return "Không có file hợp lệ"
+        return "No valid audio files"
 
-    # ghép tất cả trước
-    playlist = songs[0]
+    # ghép tất cả bài trước
+    final = songs[0]
 
     for s in songs[1:]:
-        playlist += s
+        final += s
 
-    # sau đó mới nhân 3
-    final = playlist * 3
+    # nhân 3 lần sau khi ghép
+    final = final * 3
 
+    # tạo file output
     output_name = str(uuid.uuid4()) + ".mp3"
     output_path = os.path.join(OUTPUT_FOLDER, output_name)
 
-    final.export(output_path, format="mp3")
+    try:
+        final.export(output_path, format="mp3")
+    except Exception as e:
+        return f"Export error: {str(e)}"
 
     return send_file(output_path, as_attachment=True)
 
 
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run()
